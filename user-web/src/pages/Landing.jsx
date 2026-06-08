@@ -3,6 +3,7 @@ import { Link as RouterLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useEffect, useState, useRef } from 'react'
 import { motion, useInView, useScroll, useTransform, AnimatePresence } from 'framer-motion'
+import { useLandingData } from '../hooks/useLandingData'
 
 // Import modern fonts
 import '@fontsource/inter/400.css'
@@ -130,6 +131,30 @@ const cardHover = {
   hover: { scale: 1.02, y: -8, transition: { duration: 0.3, ease: [0.21, 0.47, 0.32, 0.98] } }
 }
 
+// Fallback data if Supabase is not available
+const defaultAnnouncements = [
+  { title: 'Barangay Assembly', date: 'June 30, 2024', description: 'Quarterly Barangay Assembly at Barangay Hall, 9:00 AM' },
+  { title: 'Free Medical Mission', date: 'July 15, 2024', description: 'Free checkup, dental, and medicine distribution' },
+  { title: 'Educational Assistance', date: 'Until July 30', description: 'Scholarship applications now open for qualified students' },
+]
+
+const defaultStats = [
+  { value: '2,847', label: 'Total Residents', icon: <PeopleIcon />, delay: 0 },
+  { value: '712', label: 'Households', icon: <HomeIcon />, delay: 0.1 },
+  { value: '8', label: 'Puroks', icon: <LocationIcon />, delay: 0.2 },
+  { value: '99%', label: 'Digital Services', icon: <SpeedIcon />, delay: 0.3 },
+]
+
+const defaultOfficials = [
+  { name: 'Hon. Hilarion Nagar', role: 'Punong Barangay' },
+  { name: 'Kagawad Maria R. Santos', role: 'Barangay Kagawad' },
+  { name: 'Kagawad Jose P. Rizal', role: 'Barangay Kagawad' },
+  { name: 'Kagawad Teresa M. Lopez', role: 'Barangay Kagawad' },
+  { name: 'SK Chair Marc Caubanan', role: 'SK Chairman' },
+  { name: 'Ms. Lourdes P. Cruz', role: 'Barangay Secretary' },
+  { name: 'Mr. Ricardo M. Tan', role: 'Barangay Treasurer' },
+]
+
 export default function Landing() {
   const { user } = useAuth()
   const navigate = useNavigate()
@@ -139,6 +164,14 @@ export default function Landing() {
   const { scrollYProgress } = useScroll()
   const opacity = useTransform(scrollYProgress, [0, 0.2], [1, 0])
   const scale = useTransform(scrollYProgress, [0, 0.2], [1, 0.95])
+  
+  // Fetch data from Supabase
+  const { announcements: dbAnnouncements, statistics: dbStats, officials: dbOfficials, assistancePrograms: dbPrograms, documents: dbDocuments, loading, error } = useLandingData()
+  
+  // Use database data if available, otherwise use fallback
+  const announcements = dbAnnouncements.length > 0 ? dbAnnouncements.map(a => ({ title: a.title, date: a.date, description: a.description })) : defaultAnnouncements
+  const stats = dbStats.length > 0 ? dbStats.map(s => ({ value: s.value, label: s.label, icon: <PeopleIcon />, delay: 0 })) : defaultStats
+  const officials = dbOfficials.length > 0 ? dbOfficials : defaultOfficials
 
   useEffect(() => {
     if (user) {
